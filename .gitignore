@@ -90,5 +90,5 @@ flycheck_*.el
 # network security
 /network-security.data
 
-/subprojects/packagecache
-/subprojects/Catch2-3.1.0
+./subprojects/packagecache
+./subprojects/Catch2-3.1.0
