@@ -90,5 +90,11 @@ flycheck_*.el
 # network security
 /network-security.data
 
+# meson generated files
 subprojects/packagecache
 subprojects/Catch2-3.1.0
+
+# emacs generated files
+src/GPATH
+src/GRTAGS
+src/GTAGS

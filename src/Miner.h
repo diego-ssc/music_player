@@ -2,7 +2,6 @@
  * Copyright © 2022 Diego S.
  *
  */
-
 #pragma once
 
 #include <string>
@@ -49,5 +48,4 @@ class Miner {
    *
    */
   int add_to_database(std::string song_id);
-
 };
