@@ -1,4 +1,4 @@
-#Dependencias
+# Dependencias
 
 ```
 gstreamer
@@ -23,9 +23,4 @@ https://archlinux.org/packages/?name=gst-plugins-good
 ```
 gtkmm-4.0
 https://archlinux.org/packages/extra/x86_64/gtkmm-4.0/
-```
-
-```
-gstreamermm
-https://archlinux.org/packages/community/x86_64/gstreamermm/
 ```
