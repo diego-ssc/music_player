@@ -1,6 +1,13 @@
-#include <filesystem>
-#include <sqlite3.h>
+/*
+ * Copyright © 2022 Diego S.
+ *
+ */
+
 #include "Miner.h"
+#include <sqlite3.h>
+#include <filesystem>
+#include <string>
+
 
 Miner::Miner(std::string dir_path, std::string database_path) {
   this->dir_path = dir_path;

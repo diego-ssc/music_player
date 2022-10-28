@@ -1,4 +1,11 @@
+/*
+ * Copyright © 2022 Diego S.
+ *
+ */
+
 #pragma once
+
+#include <string>
 
 /**
  * Class to locate the .mp3 files
@@ -11,8 +18,8 @@ class Miner {
   std::string dir_path;
   /** The path of the database. */
   std::string database_path;
-  
-public:
+
+ public:
   /**
    * Class constructor.
    * @param dir_path The path of the target directory.
@@ -34,7 +41,7 @@ public:
    *
    */
   std::string get_database_path();
-  
+
   /**
    * Adds a song file to the database.
    * @param song_id The identifier of the song.
@@ -42,5 +49,5 @@ public:
    *
    */
   int add_to_database(std::string song_id);
-  
+
 };
