@@ -27,7 +27,7 @@ int Decoder::play() {
   sink = gst_element_factory_make("autoaudiosink", "play_audio");
 
   if (!pipeline || !src || !decoder || !sink) {
-    g_printerr ("Not all elements could be created.\n");
+    g_printerr("Not all elements could be created.\n");
     return -1;
   }
 
@@ -39,15 +39,15 @@ int Decoder::play() {
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
 
-  bus = gst_element_get_bus (pipeline);
+  bus = gst_element_get_bus(pipeline);
   // gst_bus_have_pending (GstBus * bus);
   msg =
-    gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-				GST_MESSAGE_EOS);
+    gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE,
+			       GST_MESSAGE_EOS);
 
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    g_error ("An error occurred! Re-run with the GST_DEBUG=*:WARN environment "
-	     "variable set for more details.");
+  if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_ERROR) {
+    g_error("An error occurred! Re-run with the GST_DEBUG=*:WARN environment "
+	    "variable set for more details.");
   }
 
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
@@ -62,7 +62,7 @@ int Decoder::play() {
 
 TagLib::ID3v2::Tag* Decoder::get_tag() {
   TagLib::MPEG::File file = TagLib::MPEG::File(song_path, true,
-			   TagLib::AudioProperties::ReadStyle::Accurate);
+					       TagLib::AudioProperties::ReadStyle::Accurate);
 
   if (!file.hasID3v2Tag())
     return NULL;
