@@ -93,6 +93,7 @@ flycheck_*.el
 # meson generated files
 subprojects/packagecache
 subprojects/Catch2-3.1.0
+subprojects/taglib-1.13
 
 # emacs generated files
 src/GPATH
