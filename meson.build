@@ -1,9 +1,13 @@
 project('music_player', 'cpp',
         version : '0.1',
-        default_options : ['warning_level=3'])
+        default_options : ['warning_level=3',
+                           'cpp_std=c++17'])
 
 add_global_arguments('-lpthread',
                      '-rdynamic',
+                     '-std=c++17',
+                     '-libstdc++',
+                     '-lstdc++fs',
                      language : 'cpp') #-g
 
 gtk = dependency('gtkmm-4.0')
@@ -14,10 +18,11 @@ gst_dep = dependency('gstreamer-1.0', version : '>=@0@'.format('1.8.0'))
 gmodule_dep = dependency('gmodule-2.0', version : '>=@0@'.format('2.41.1'))
 gio_dep = dependency('gio-2.0', version : '>=@0@'.format('2.41.1'))
 catch2 = subproject('catch2').get_variable('catch2_dep')
+taglib = subproject('taglib').get_variable('taglib_dep')
 
 src = [
   'src/Miner.cc',
-  'src/Player.cc',
+  'src/Decoder.cc',
   'src/Music_Player-main.cc'
 ]
 
@@ -26,14 +31,16 @@ includes = include_directories('src/')
 music_player = static_library('music_player', src,
                               dependencies: [ gtk, threads, glibmm,
                                               gstreamermm, gst_dep,
-                                              gmodule_dep, gio_dep ],
+                                              gmodule_dep, gio_dep,
+                                              taglib ],
                               include_directories: [ includes ],
                               install : true)
 
 exe = executable('music_player', src,
                  dependencies: [ gtk, threads, glibmm,
                                  gstreamermm, gst_dep,
-                                 gmodule_dep, gio_dep ],
+                                 gmodule_dep, gio_dep,
+                                 taglib ],
                  install : true)
 
 catch_sources = [ 'test/test_miner.cc' ]

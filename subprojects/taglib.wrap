@@ -1,0 +1,12 @@
+[wrap-file]
+directory = taglib-1.13
+source_url = https://github.com/taglib/taglib/releases/download/v1.13/taglib-1.13.tar.gz
+source_filename = taglig-1.13.tar.gz
+source_hash = 58f08b4db3dc31ed152c04896ee9172d22052bc7ef12888028c01d8b1d60ade0
+patch_filename = taglib_1.13-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/taglib_1.13-1/get_patch
+patch_hash = 1d5364cc85a2a8f0eb699e30808a3899b3a6db9cb96f8ac020286032ea43f595
+wrapdb_version = 1.13-1
+
+[provide]
+taglib = taglib_dep
