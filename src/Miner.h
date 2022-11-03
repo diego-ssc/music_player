@@ -18,7 +18,10 @@ class Miner {
   std::filesystem::path dir_path;
   /** The path of the database. */
   std::filesystem::path database_path;
-
+  /** The name of the current user executing
+      the application */
+  std::string username;
+  
  public:
   /**
    * Class constructor.
@@ -48,5 +51,12 @@ class Miner {
    *
    */
   bool database_exists();
+
+  /**
+   * Method that creates the database (if it
+   * does not exist).
+   *
+   */
+  void create_database();
 
 };

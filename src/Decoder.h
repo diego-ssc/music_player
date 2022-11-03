@@ -43,10 +43,9 @@ class Decoder {
   /**
    * Method that returns (if it has one) the
    * Id3v2 tag of the song file.
-   * @return the Id3v2 tag of the song file.
+   * @return the Id3v2 tag of the song file
+   * or NULL, if it has not one.
    *
    */
   TagLib::ID3v2::Tag* get_tag();
-
-
 };

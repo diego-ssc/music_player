@@ -8,12 +8,14 @@ add_global_arguments('-lpthread',
                      '-std=c++17',
                      '-libstdc++',
                      '-lstdc++fs',
+                     '-lsqlite3',
                      language : 'cpp') #-g
 
 gtk = dependency('gtkmm-4.0')
 threads = dependency('threads')
 glibmm = dependency('glibmm-2.68')
 gstreamermm = dependency('gstreamer-1.0')
+sqlite = dependency('sqlite3')
 gst_dep = dependency('gstreamer-1.0', version : '>=@0@'.format('1.8.0'))
 gmodule_dep = dependency('gmodule-2.0', version : '>=@0@'.format('2.41.1'))
 gio_dep = dependency('gio-2.0', version : '>=@0@'.format('2.41.1'))
@@ -32,7 +34,7 @@ music_player = static_library('music_player', src,
                               dependencies: [ gtk, threads, glibmm,
                                               gstreamermm, gst_dep,
                                               gmodule_dep, gio_dep,
-                                              taglib ],
+                                              taglib, sqlite ],
                               include_directories: [ includes ],
                               install : true)
 
@@ -40,12 +42,12 @@ exe = executable('music_player', src,
                  dependencies: [ gtk, threads, glibmm,
                                  gstreamermm, gst_dep,
                                  gmodule_dep, gio_dep,
-                                 taglib ],
+                                 taglib, sqlite ],
                  install : true)
 
 catch_sources = [ 'test/test_miner.cc' ]
 catch_exe = executable ( 'test_miner', catch_sources,
-                         dependencies : [ catch2 ],
+                         dependencies : [ catch2, sqlite ],
                          include_directories: [ includes ],
                          link_with: [ music_player ])
 
