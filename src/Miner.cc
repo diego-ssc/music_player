@@ -56,9 +56,9 @@ void Miner::create_database() {
 
   if (!std::filesystem::exists(p)) {
     if (!std::filesystem::create_directory(p)) {
-      std::cerr<<"Could not create music database directory."<<std::endl;
+      std::cerr << "Could not create music database directory." << std::endl;
     } else {
-      std::cout<<"Music database directory created successfully"<<std::endl;
+      std::cout << "Music database directory created successfully" << std::endl;
     }
   }
 

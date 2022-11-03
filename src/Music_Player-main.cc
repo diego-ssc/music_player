@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   if (tag == nullptr) return 0;
   std::cout << "Artist: " << tag->artist() << std::endl;
   std::cout << "Title: " << tag->title() << std::endl;
-  std::cout << "Album: "<<tag->album() << std::endl;
+  std::cout << "Album: " << tag->album() << std::endl;
   std::cout << "Year: " << tag->year() << std::endl;
   std::cout << "Genre: " << tag->genre() << std::endl;
   std::cout << "Track number: " << tag->track() << std::endl;

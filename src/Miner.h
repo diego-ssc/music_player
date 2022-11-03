@@ -58,5 +58,4 @@ class Miner {
    *
    */
   void create_database();
-
 };
