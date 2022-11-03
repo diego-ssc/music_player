@@ -18,14 +18,14 @@ const char* Decoder::get_song_path() {
   return this->song_path;
 }
 
-void on_pad_added (GstElement *element, GstPad *pad,
-                   gpointer data) {
+void on_pad_added(GstElement *element, GstPad *pad,
+                  gpointer data) {
   GstPad *sinkpad;
-  GstElement *queue = (GstElement *) data;
-  g_print ("Dynamic pad created, linking demuxer/decoder\n");
-  sinkpad = gst_element_get_static_pad (queue, "sink");
-  gst_pad_link (pad, sinkpad);
-  gst_object_unref (sinkpad);
+  GstElement *queue = reinterpret_cast<GstElement *>(data);
+  g_print("Dynamic pad created, linking demuxer/decoder\n");
+  sinkpad = gst_element_get_static_pad(queue, "sink");
+  gst_pad_link(pad, sinkpad);
+  gst_object_unref(sinkpad);
 }
 
 int Decoder::play() {
@@ -52,8 +52,9 @@ int Decoder::play() {
   g_object_set(filesrc, "location", this->song_path, NULL);
   gst_bin_add_many(GST_BIN(pipeline), filesrc, mpegaudioparse, mpg123audiodec,
                    audioconvert, audioresample, autoaudiosink, NULL);
-  if (!gst_element_link_many(filesrc, mpegaudioparse, mpg123audiodec, audioconvert,
-                             audioresample, autoaudiosink, NULL)) {
+  if (!gst_element_link_many(filesrc, mpegaudioparse, mpg123audiodec,
+                             audioconvert, audioresample, autoaudiosink,
+                             NULL)) {
     g_warning("Failed to link elements.\n");
     exit(1);
   }
@@ -62,8 +63,8 @@ int Decoder::play() {
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
   bus = gst_element_get_bus(pipeline);
-  msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE,
-                                   (GstMessageType)(GST_MESSAGE_EOS | GST_MESSAGE_ERROR));
+  msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, (GstMessageType)
+                                   (GST_MESSAGE_EOS | GST_MESSAGE_ERROR));
 
   switch (GST_MESSAGE_TYPE(msg)) {
   case GST_MESSAGE_EOS: {
@@ -118,7 +119,8 @@ int Decoder::play() {
   // gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
   // bus = gst_element_get_bus(pipeline);
-  // msg = gst_bus_poll(bus, (GstMessageType)(GST_MESSAGE_EOS | GST_MESSAGE_ERROR), -1);
+  // msg = gst_bus_poll(bus, (GstMessageType)
+  //                    (GST_MESSAGE_EOS | GST_MESSAGE_ERROR), -1);
 
   // switch (GST_MESSAGE_TYPE(msg)) {
   // case GST_MESSAGE_EOS: {
@@ -154,8 +156,9 @@ int Decoder::play() {
 }
 
 TagLib::ID3v2::Tag* Decoder::get_tag() {
-  TagLib::MPEG::File* file = new TagLib::MPEG::File(this->song_path, true,
-                                                    TagLib::AudioProperties::ReadStyle::Accurate);
+  TagLib::MPEG::File* file =
+    new TagLib::MPEG::File(this->song_path, true,
+                           TagLib::AudioProperties::ReadStyle::Accurate);
 
   if (!file->hasID3v2Tag())
     return NULL;

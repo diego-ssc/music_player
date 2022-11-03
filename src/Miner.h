@@ -21,14 +21,14 @@ class Miner {
   /** The name of the current user executing
       the application */
   std::string username;
-  
+
  public:
   /**
    * Class constructor.
    * @param dir_path The path of the target directory.
    *
    */
-  Miner(std::string dir_path);
+  explicit Miner(std::string dir_path);
 
   /**
    * Method that returns the directory path.

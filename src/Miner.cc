@@ -6,15 +6,17 @@
 
 #include "Miner.h"
 #include <sqlite3.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <filesystem>
 #include <string>
 #include <iostream>
-#include <stdio.h>
-#include <unistd.h>
 
 Miner::Miner(std::string dir_path) {
   this->dir_path = dir_path;
-  this->username = getlogin();
+  char name[1024];
+  getlogin_r(name, sizeof(name));
+  this->username = name;
 }
 
 std::filesystem::path Miner::get_dir_path() {
@@ -37,7 +39,7 @@ bool Miner::database_exists() {
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
   int i;
-  for(i = 0; i<argc; i++) {
+  for (i = 0; i < argc; i++) {
     printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
   }
   printf("\n");
@@ -47,11 +49,11 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 void Miner::create_database() {
   sqlite3 *db;
   char *zErrMsg = 0;
-  int rc; 
+  int rc;
   const char *sql;
   std::filesystem::path p =
     "/home/"+ username +"/.local/share/music_player";
-  
+
   if (!std::filesystem::exists(p)) {
     if (!std::filesystem::create_directory(p)) {
       std::cerr<<"Could not create music database directory."<<std::endl;
@@ -60,7 +62,8 @@ void Miner::create_database() {
     }
   }
 
-  rc = sqlite3_open(("/home/" + username + "/.local/share/music_player/music.db").c_str(),
+  rc = sqlite3_open(("/home/" + username + "/.local/share/"
+                     "music_player/music.db").c_str(),
                     &db);
 
   if (rc) {
@@ -88,7 +91,7 @@ void Miner::create_database() {
     "INSERT INTO types (id_type,description) "                  \
     "VALUES (1, 'Group'); "                                     \
     "INSERT INTO types (id_type,description)"                   \
-    "VALUES (2, 'Unknown');";                                    
+    "VALUES (2, 'Unknown');";
 
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
@@ -171,7 +174,7 @@ void Miner::create_database() {
     "genre        TEXT,"                                                \
     "FOREIGN KEY (id_performer) REFERENCES performers(id_performer),"   \
     "FOREIGN KEY (id_album) REFERENCES albums(id_album));";
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if (rc != SQLITE_OK) {
@@ -187,7 +190,7 @@ void Miner::create_database() {
     "PRIMARY KEY (id_person, id_group),"                                \
     "FOREIGN KEY (id_person) REFERENCES persons(id_person),"            \
     "FOREIGN KEY (id_group)  REFERENCES groups(id_group));";
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if (rc != SQLITE_OK) {
@@ -196,6 +199,6 @@ void Miner::create_database() {
   } else {
     fprintf(stdout, "[in_group] Table created successfully\n");
   }
-  
+
   sqlite3_close(db);
 }

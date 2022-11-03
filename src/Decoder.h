@@ -13,7 +13,6 @@
  *
  */
 class Decoder {
-
   /** The path of the .mp3 song */
   const char* song_path;
 
@@ -22,7 +21,7 @@ class Decoder {
    * Class constructor
    *
    */
-  Decoder(const char* song_path);
+  explicit Decoder(const char* song_path);
 
   /**
    * Method that returns the path of the song.
