@@ -10,33 +10,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Prepare environment
-        run: sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+    #   - name: Prepare environment
+    #     run: sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
           
-      - name: Configure build
-        working-directory: ${{runner.workspace}}
-        env:
-          CXX: ${{matrix.cxx}}
-          CXXFLAGS: ${{matrix.cxxflags}}
-          # Note: $GITHUB_WORKSPACE is distinct from ${{runner.workspace}}.
-          #       This is important
-          run: |
-            meson build $GITHUB_WORKSPACE \
-            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-            -DCMAKE_CXX_STANDARD=${{matrix.std}} \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCATCH_DEVELOPMENT_BUILD=ON \
-            -G Ninja
-    - name: Build tests + lib
-      working-directory: ${{runner.workspace}}/build
-      run: ninja
+    #   - name: Configure build
+    #     working-directory: ${{runner.workspace}}
+    #     env:
+    #       CXX: ${{matrix.cxx}}
+    #       CXXFLAGS: ${{matrix.cxxflags}}
+    #       # Note: $GITHUB_WORKSPACE is distinct from ${{runner.workspace}}.
+    #       #       This is important
+    #       run: |
+    #         meson build $GITHUB_WORKSPACE \
+    #         -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+    #         -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+    #         -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+    #         -DCMAKE_CXX_EXTENSIONS=OFF \
+    #         -DCATCH_DEVELOPMENT_BUILD=ON \
+    #         -G Ninja
+    # - name: Build tests + lib
+    #   working-directory: ${{runner.workspace}}/build
+    #   run: ninja
 
-    - name: Run tests
-      env:
-          CTEST_OUTPUT_ON_FAILURE: 1
-      working-directory: ${{runner.workspace}}/build
-      run: ninja -C build/ ${{matrix.build_type}} ../test/test_miner.cc && ./build/test_miner
+    # - name: Run tests
+    #   env:
+    #       CTEST_OUTPUT_ON_FAILURE: 1
+    #   working-directory: ${{runner.workspace}}/build
+    #   run: ninja -C build/ ${{matrix.build_type}} ../test/test_miner.cc && ./build/test_miner
         
       - name: Run Super-Linter
         uses: github/super-linter@v3.17.0
