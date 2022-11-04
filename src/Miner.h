@@ -46,7 +46,7 @@ class Miner {
    *
    */
   void recursive_search();
-  
+
   /**
    * Method that adds a song file to the database.
    * @param song_path the path of the song that is being added.
@@ -68,7 +68,7 @@ class Miner {
    */
   bool is_in_database(std::string database, std::string field,
                       std::string data);
-  
+
   /**
    * Method that verifies if the database exists.
    * @return true, if the database exists; false,

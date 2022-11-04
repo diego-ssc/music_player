@@ -191,7 +191,8 @@ bool Miner::is_in_database(std::string database, std::string field,
     fprintf(stderr, "Opened database successfully\n");
   }
 
-  sql = ("Select * from " + database + " where " + field + " = " + data).c_str();
+  sql = ("Select * from " + database + " where " +
+         field + " = " + data).c_str();
   struct sqlite3_stmt *selectstmt;
   rc = sqlite3_prepare_v2(db, sql, -1, &selectstmt, NULL);
   bool a = (rc == SQLITE_OK) && (sqlite3_step(selectstmt) == SQLITE_ROW);
