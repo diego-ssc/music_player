@@ -96,62 +96,6 @@ int Decoder::play() {
   gst_object_unref(pipeline);
   gst_object_unref(bus);
 
-  /* Using command line instructions */
-  // GstElement* filesrc;
-  // GstBus *bus;
-  // GstMessage *msg;
-  // GError* error = NULL;
-  // GstElement *pipeline;
-
-  // pipeline = gst_parse_launch("filesrc name=filesrc ! mpegaudioparse ! "
-  //                           "mpg123audiodec ! audioconvert ! "
-  //                                     "audioresample ! autoaudiosink",
-  //                   &error);
-
-  // if (!pipeline) {
-  //   g_print("Parse error %s\n", error->message);
-  //   exit(1);
-  // }
-
-  // filesrc = gst_bin_get_by_name(GST_BIN(pipeline), "filesrc");
-  // g_object_set(filesrc, "location", this->song_path, NULL);
-  // g_object_unref(filesrc);
-  // gst_element_set_state(pipeline, GST_STATE_PLAYING);
-
-  // bus = gst_element_get_bus(pipeline);
-  // msg = gst_bus_poll(bus, (GstMessageType)
-  //                    (GST_MESSAGE_EOS | GST_MESSAGE_ERROR), -1);
-
-  // switch (GST_MESSAGE_TYPE(msg)) {
-  // case GST_MESSAGE_EOS: {
-  //   g_print("EOS\n");
-  //   break;
-  // }
-  // case GST_MESSAGE_ERROR: {
-  //   GError* err = NULL;
-  //   gchar* dbg = NULL;
-
-  //   gst_message_parse_error(msg, &err, &dbg);
-  //   if (err) {
-  //     g_printerr("ERROR: %s\n", err->message);
-  //     g_error_free(err);
-  //   }
-  //   if (dbg) {
-  //     g_printerr("[Debug details: %s]\n", dbg);
-  //     g_free(dbg);
-  //   }
-  //   break;
-  // }
-  // default:
-  //   g_printerr("Unexpected message of type %d", GST_MESSAGE_TYPE(msg));
-  //   break;
-  // }
-
-  // gst_message_unref(msg);
-  // gst_element_set_state(pipeline, GST_STATE_NULL);
-  // gst_object_unref(pipeline);
-  // gst_object_unref(bus);
-
   return 0;
 }
 

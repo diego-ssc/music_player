@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/mx/unam/ciencias/music_player">
+    <file preprocess="xml-stripblanks">ui/music_player_window.ui</file>
+  </gresource>
+</gresources>

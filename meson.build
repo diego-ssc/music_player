@@ -21,11 +21,21 @@ gmodule_dep = dependency('gmodule-2.0', version : '>=@0@'.format('2.41.1'))
 gio_dep = dependency('gio-2.0', version : '>=@0@'.format('2.41.1'))
 catch2 = subproject('catch2').get_variable('catch2_dep')
 taglib = subproject('taglib').get_variable('taglib_dep')
+gnome = import('gnome')
+
+gresources = gnome.compile_resources(
+  'gresources', 'data/application.gresource.xml',
+  source_dir: 'data',
+  export: true,
+  c_name: 'gresources')
 
 src = [
   'src/Miner.cc',
   'src/Decoder.cc',
-  'src/Music_Player-main.cc'
+  'src/Music_Player-main.cc',
+  'src/Application.cc',
+  'src/Application_Window.cc',
+  gresources
 ]
 
 includes = include_directories('src/')

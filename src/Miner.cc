@@ -11,9 +11,12 @@
 #include <sqlite3.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <cstring>
 #include <filesystem>
 #include <string>
 #include <iostream>
+
+char callback_result[1024] = "";
 
 Miner::Miner(std::string dir_path) {
   this->dir_path = dir_path;
@@ -27,10 +30,16 @@ std::filesystem::path Miner::get_dir_path() {
   return this->dir_path;
 }
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-  int i;
-  for (i = 0; i < argc; i++) {
-    printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+/*
+ * When the data in the field does not exist (using SELECT operator),
+ * it won't execute; that's why it's cleared before the execution of
+ * sqlite3_exec.
+ */
+static int callback(void *userData, int numCol,
+                    char **colData, char **colName) {
+  int i;  
+  for (i = 0; i < numCol; i++) {
+    strcat(callback_result, colData[i]);
   }
   printf("\n");
   return 0;
@@ -44,28 +53,36 @@ bool has_suffix(const std::string &str, const std::string &suffix) {
 void Miner::recursive_search() {
   for (const auto& dirEntry
          : std::filesystem::recursive_directory_iterator(dir_path)) {
-    std::cout << dirEntry << std::endl;
     const std::string & str = dirEntry.path().string();
     if (dirEntry.is_directory()) continue;
     if (has_suffix(str, ".mp3")) {
       add_to_database(dirEntry.path());
-      std::cout << "Fue agregado" << std::endl;
     }
   }
 }
 
-int Miner::add_to_database(std::filesystem::path song_path) {
+void replace_single_quotation_marks(TagLib::String &string) {
+  int i = string.find("'", 0);
+  while (i != -1) {
+    string = (string.to8Bit()).replace(i, 1, "''");
+    i = string.find("'", i + 2);
+  }
+}
+
+int Miner::add_to_database(std::filesystem::path path) {
   if (!database_exists())
     create_database();
 
-  if (is_in_database("rolas", "path", song_path))
+  TagLib::String song_path = TagLib::String(path);
+  replace_single_quotation_marks(song_path);
+  if (is_in_database("rolas", "path", song_path.to8Bit()))
     return 0;
 
   sqlite3 *db;
   char *zErrMsg = 0;
   int rc;
   const char *sql;
-  Decoder decoder = Decoder((song_path).c_str());
+  Decoder decoder = Decoder(path.c_str());
   TagLib::ID3v2::Tag* tag = decoder.get_tag();
   rc = sqlite3_open(("/home/" + username + "/.local/share/"
                      "music_player/music.db").c_str(),
@@ -96,6 +113,7 @@ int Miner::add_to_database(std::filesystem::path song_path) {
     title = tag->title();
     if (title.isEmpty())
       title = "Unknown";
+    replace_single_quotation_marks(title);
 
     track = tag->track();
     year = tag->year();
@@ -105,46 +123,51 @@ int Miner::add_to_database(std::filesystem::path song_path) {
     genre = tag->genre();
     if (genre.isEmpty())
       genre = "Unknown";
+    replace_single_quotation_marks(genre);
 
     artist = tag->artist();
     if (artist.isEmpty())
       artist = "Unknown";
+    replace_single_quotation_marks(artist);
 
     album = tag->album();
     if (album.isEmpty())
       album = "Unknown";
+    replace_single_quotation_marks(album);
   }
 
   std::string str_counter = std::to_string(counter);
-  sql = ("INSERT INTO rolas (id_rola,id_performer,id_album,"            \
-         "path,title,track,year,genre) "                                \
-         "VALUES (" + str_counter + ", "                                \
-         + str_counter + ", " + str_counter                             \
-         + ", " + std::string(song_path) + ", " + title                 \
-         + ", " + std::to_string(track) + ", "                          \
-         + std::to_string(year) + ", " + genre                          \
-         + ");").toCString();
-
+  TagLib::String str = "INSERT INTO rolas (id_rola,id_performer,"       \
+    "id_album,path,title,track,year,genre) "                            \
+    "VALUES (" + str_counter + ", "                                     \
+    + str_counter + ", " + str_counter                                  \
+    + ", '" + song_path + "', '" + title                                \
+    + "', " + std::to_string(track) + ", "                              \
+    + std::to_string(year) + ", '" + genre                              \
+    + "');";
+  sql = str.toCString(true);
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    fprintf(stderr, "%s\n", sql);
     sqlite3_free(zErrMsg);
   } else {
     fprintf(stdout, "[rolas] Records created successfully\n");
   }
 
   if (artist != "Unknown" &&
-      is_in_database("performers", "name", artist.to8Bit())) {
-    sql = ("INSERT INTO performers (id_performer,id_type,"              \
-           "name) "                                                     \
-           "VALUES (" + str_counter + ", "                              \
-           "2, " + artist + ");").toCString();
-
+      !is_in_database("performers", "name", artist.to8Bit())) {
+    str = "INSERT INTO performers (id_performer,id_type,"               \
+      "name) "                                                          \
+      "VALUES (" + str_counter + ", "                                   \
+      "2, '" + artist + "');";
+    sql = str.toCString(true);
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     if (rc != SQLITE_OK) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
       sqlite3_free(zErrMsg);
     } else {
       fprintf(stdout, "[performers] Records created successfully\n");
@@ -152,17 +175,17 @@ int Miner::add_to_database(std::filesystem::path song_path) {
   }
 
   if (album != "Unknown" &&
-      is_in_database("albums", "name", album.to8Bit())) {
-    sql = ("INSERT INTO albums (id_album,path,"                       \
-           "name,year) "                                              \
-           "VALUES (" + str_counter + ", "                            \
-           + std::string(song_path) + ", "                            \
-           + album + std::to_string(year) + ");").toCString();
-
+      !is_in_database("albums", "name", album.to8Bit())) {
+    str = ("INSERT INTO albums (id_album,path,"                        \
+           "name,year) "                                               \
+           "VALUES (" + str_counter + ", '"                            \
+           + song_path + "', '"                                        \
+           + album + "', " + std::to_string(year) + ");").toCString();
+    sql = str.toCString(true);
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
     if (rc != SQLITE_OK) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
       sqlite3_free(zErrMsg);
     } else {
       fprintf(stdout, "[albums] Records created successfully\n");
@@ -175,30 +198,44 @@ int Miner::add_to_database(std::filesystem::path song_path) {
   return 0;
 }
 
+/** Only for 'TEXT' data */
 bool Miner::is_in_database(std::string database, std::string field,
                            std::string data) {
   sqlite3 *db;
   int rc;
   const char *sql;
+  char *zErrMsg = 0;
 
   rc = sqlite3_open(("/home/" + username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
-  if (rc) {
+  if (rc != SQLITE_OK) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
   } else {
-    fprintf(stderr, "Opened database successfully\n");
+    fprintf(stdout, "Opened database successfully\n");
   }
-
-  sql = ("Select * from " + database + " where " +
-         field + " = " + data).c_str();
-  struct sqlite3_stmt *selectstmt;
-  rc = sqlite3_prepare_v2(db, sql, -1, &selectstmt, NULL);
-  bool a = (rc == SQLITE_OK) && (sqlite3_step(selectstmt) == SQLITE_ROW);
-  sqlite3_finalize(selectstmt);
-
-  return a;
+  std::string str = "SELECT " + field + " FROM " + database +
+    " WHERE EXISTS (SELECT " + field + " FROM " + database +
+    " WHERE " + field + " = '" + data +"');";
+  
+  sql = str.c_str();
+  /* callback_result cleared before callback 
+     because callback won't execute if the
+     SELECT instruction does not return anything */
+  if (strlen(callback_result) != 0) {
+    memset(&callback_result[0], 0, sizeof(callback_result));
+  }
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    fprintf(stderr, "%s\n", sql);
+    sqlite3_free(zErrMsg);
+  } else {
+    fprintf(stdout, "Operation done successfully\n");
+  }
+  sqlite3_close(db);
+  return strlen(callback_result) != 0;
 }
 
 bool Miner::database_exists() {
