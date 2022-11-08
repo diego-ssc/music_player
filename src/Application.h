@@ -25,6 +25,6 @@ class Application: public Gtk::Application {
  private:
   Application_Window* create_appwindow();
   void on_hide_window(Gtk::Window* window);
-  
-  
+
+
 };

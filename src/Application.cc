@@ -47,9 +47,9 @@ void Application::on_open(const Gio::Application::type_vec_files& files,
     if (!appwindow)
       appwindow = create_appwindow();
 
-    for (const auto& file : files) 
-      Miner miner = Miner(file->get_path());// modify given id for songs
-    
+    Miner miner = Miner(files[0]->get_path());
+    miner.recursive_search();
+
     appwindow->present();
   } catch (const Glib::Error& ex) {
     std::cerr << "Application::on_open(): " << ex.what() << std::endl;

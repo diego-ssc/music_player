@@ -16,12 +16,14 @@ class Application_Window: public Gtk::ApplicationWindow {
  protected:
   // Signal handlers
   void on_search_text_changed();
-  void on_visible_child_changed();
-  
+
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
   Gtk::ToggleButton* m_search;
   Gtk::SearchBar* m_searchbar;
   Gtk::SearchEntry* m_searchentry;
   Gtk::TreeView* m_treeview;
   Gtk::TreeModel* m_treemodel;
+  Gtk::ToggleButton* m_list;
+  Gtk::ScrolledWindow* m_scrolledwindow;
+  Glib::RefPtr<Glib::Binding> m_prop_binding;
 };

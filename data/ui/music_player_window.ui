@@ -14,8 +14,24 @@
       <object class="GtkBox" id="vbox">
         <property name="orientation">vertical</property>
         <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <child type="title">
+              <object class="GtkSearchBar" id="search_bar">
+                <property name="child">
+                  <object class="GtkSearchEntry" id="search_entry">
+                    <property name="focusable">1</property>
+                  </object>
+                </property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
           <object class="GtkPaned" id="paned">
             <property name="resize-start-child">0</property>
+            <property name="valign">fill</property>
+            <property name="vexpand">1</property>
             <property name="focusable">1</property>
             <property name="position">720</property>
             <property name="position-set">1</property>
@@ -29,10 +45,10 @@
               </object>
             </child>
             <child>
-              <object class="GtkScrolledWindow" id="songs_scroll">
+              <object class="GtkScrolledWindow" id="song_scroll">
                 <property name="focusable">1</property>
                 <property name="child">
-                  <object class="GtkTreeView" id="songs_list">
+                  <object class="GtkTreeView" id="song_list">
                     <property name="focusable">1</property>
                     <property name="hexpand">0</property>
                     <property name="vexpand">1</property>
@@ -76,7 +92,8 @@
         </child>
         <child>
           <object class="GtkActionBar">
-            <property name="valign">start</property>
+            <property name="valign">fill</property>
+            <property name="vexpand">0</property>
             <child>
               <object class="GtkButton" id="prev_button">
                 <property name="focusable">1</property>
@@ -154,15 +171,6 @@
               </object>
             </child>
             <child>
-              <object class="GtkSearchBar">
-                <property name="child">
-                  <object class="GtkSearchEntry">
-                    <property name="focusable">1</property>
-                  </object>
-                </property>
-              </object>
-            </child>
-            <child>
               <object class="GtkLabel" id="song_playing_label">
                 <property name="label" translatable="1">Now Playing: None</property>
                 <attributes>
@@ -213,7 +221,7 @@
           <object class="GtkBox" id="right_box">
             <property name="spacing">6</property>
             <child>
-              <object class="GtkToggleButton" id="toggle_songs_list">
+              <object class="GtkToggleButton" id="toggle_song_list">
                 <property name="focusable">1</property>
                 <property name="receives-default">1</property>
                 <child>

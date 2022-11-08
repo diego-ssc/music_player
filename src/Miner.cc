@@ -1,4 +1,4 @@
-/*
+de/*
  * Copyright © 2022 Diego S.
  *
  */
@@ -37,11 +37,16 @@ std::filesystem::path Miner::get_dir_path() {
  */
 static int callback(void *userData, int numCol,
                     char **colData, char **colName) {
-  int i;  
+  int i;
   for (i = 0; i < numCol; i++) {
     strcat(callback_result, colData[i]);
   }
-  printf("\n");
+  return 0;
+}
+
+static int id_reference(void *userData, int numCol,
+                        char **colData, char **colName) {
+  strcat(callback_result, colData[0]);
   return 0;
 }
 
@@ -56,7 +61,7 @@ void Miner::recursive_search() {
     const std::string & str = dirEntry.path().string();
     if (dirEntry.is_directory()) continue;
     if (has_suffix(str, ".mp3")) {
-      add_to_database(dirEntry.path());
+      add_to_database(std::filesystem::absolute(dirEntry.path()));
     }
   }
 }
@@ -91,8 +96,13 @@ int Miner::add_to_database(std::filesystem::path path) {
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
-  } else {
-    fprintf(stderr, "Opened database successfully\n");
+  }
+
+  sql = "PRAGMA foreign_keys = ON;";
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
   }
 
   TagLib::String title;
@@ -140,8 +150,8 @@ int Miner::add_to_database(std::filesystem::path path) {
   TagLib::String str = "INSERT INTO rolas (id_rola,id_performer,"       \
     "id_album,path,title,track,year,genre) "                            \
     "VALUES (" + str_counter + ", "                                     \
-    + str_counter + ", " + str_counter                                  \
-    + ", '" + song_path + "', '" + title                                \
+    "NULL, NULL"                                                        \
+    ", '" + song_path + "', '" + title                                  \
     + "', " + std::to_string(track) + ", "                              \
     + std::to_string(year) + ", '" + genre                              \
     + "');";
@@ -152,8 +162,6 @@ int Miner::add_to_database(std::filesystem::path path) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     fprintf(stderr, "%s\n", sql);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[rolas] Records created successfully\n");
   }
 
   if (artist != "Unknown" &&
@@ -169,8 +177,6 @@ int Miner::add_to_database(std::filesystem::path path) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       fprintf(stderr, "%s\n", sql);
       sqlite3_free(zErrMsg);
-    } else {
-      fprintf(stdout, "[performers] Records created successfully\n");
     }
   }
 
@@ -187,8 +193,58 @@ int Miner::add_to_database(std::filesystem::path path) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       fprintf(stderr, "%s\n", sql);
       sqlite3_free(zErrMsg);
-    } else {
-      fprintf(stdout, "[albums] Records created successfully\n");
+    }
+  }
+
+  if (artist != "Unknown") {
+    if (strlen(callback_result) != 0)
+      memset(&callback_result[0], 0, sizeof(callback_result));
+
+    str = "SELECT id_performer FROM performers"
+      " WHERE EXISTS (SELECT name FROM performers"
+      " WHERE name = '" + artist +"');";
+    sql = str.toCString(true);
+    rc = sqlite3_exec(db, sql, id_reference, 0, &zErrMsg);
+    if (rc != SQLITE_OK) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
+      sqlite3_free(zErrMsg);
+    }
+
+    str = "UPDATE rolas set id_performer = " + std::string(callback_result) +
+      " where id_rola = " + str_counter;
+    sql = str.toCString(true);
+    rc = sqlite3_exec(db, sql, id_reference, 0, &zErrMsg);
+    if (rc != SQLITE_OK) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
+      sqlite3_free(zErrMsg);
+    }
+  }
+
+    if (album != "Unknown") {
+    if (strlen(callback_result) != 0)
+      memset(&callback_result[0], 0, sizeof(callback_result));
+
+    str = "SELECT id_album FROM albums"
+      " WHERE EXISTS (SELECT name FROM albums"
+      " WHERE name = '" + album +"');";
+    sql = str.toCString(true);
+    rc = sqlite3_exec(db, sql, id_reference, 0, &zErrMsg);
+    if (rc != SQLITE_OK) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
+      sqlite3_free(zErrMsg);
+    }
+
+    str = "UPDATE rolas set id_album = " + std::string(callback_result) +
+      " where id_rola = " + str_counter;
+    sql = str.toCString(true);
+    rc = sqlite3_exec(db, sql, id_reference, 0, &zErrMsg);
+    if (rc != SQLITE_OK) {
+      fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      fprintf(stderr, "%s\n", sql);
+      sqlite3_free(zErrMsg);
     }
   }
 
@@ -212,15 +268,13 @@ bool Miner::is_in_database(std::string database, std::string field,
   if (rc != SQLITE_OK) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
-  } else {
-    fprintf(stdout, "Opened database successfully\n");
   }
   std::string str = "SELECT " + field + " FROM " + database +
     " WHERE EXISTS (SELECT " + field + " FROM " + database +
     " WHERE " + field + " = '" + data +"');";
-  
+
   sql = str.c_str();
-  /* callback_result cleared before callback 
+  /* callback_result cleared before callback
      because callback won't execute if the
      SELECT instruction does not return anything */
   if (strlen(callback_result) != 0) {
@@ -231,8 +285,6 @@ bool Miner::is_in_database(std::string database, std::string field,
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     fprintf(stderr, "%s\n", sql);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "Operation done successfully\n");
   }
   sqlite3_close(db);
   return strlen(callback_result) != 0;
@@ -268,8 +320,6 @@ void Miner::create_database() {
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
-  } else {
-    fprintf(stderr, "Opened database successfully\n");
   }
 
   sql = "CREATE TABLE types("                 \
@@ -281,8 +331,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[types] Table created successfully\n");
   }
 
   sql = "INSERT INTO types (id_type,description) "              \
@@ -297,8 +345,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[types] Records created successfully\n");
   }
 
   sql = "CREATE TABLE performers("                              \
@@ -312,8 +358,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[performers] Table created successfully\n");
   }
 
   sql = "CREATE TABLE persons("                                 \
@@ -328,8 +372,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[persons] Table created successfully\n");
   }
 
   sql = "CREATE TABLE groups("                                         \
@@ -343,8 +385,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[groups] Table created successfully\n");
   }
 
   sql = "CREATE TABLE albums("                                       \
@@ -358,8 +398,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[albums] Table created successfully\n");
   }
 
   sql = "CREATE TABLE rolas("                                           \
@@ -379,8 +417,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[rolas] Table created successfully\n");
   }
 
   sql = "CREATE TABLE in_group("                                        \
@@ -395,8 +431,6 @@ void Miner::create_database() {
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
-  } else {
-    fprintf(stdout, "[in_group] Table created successfully\n");
   }
 
   sqlite3_close(db);
