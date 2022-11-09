@@ -1,4 +1,4 @@
-de/*
+/*
  * Copyright © 2022 Diego S.
  *
  */
@@ -6,11 +6,13 @@ de/*
 
 #include "Miner.h"
 #include "Decoder.h"
+#include "Model_Columns.h"
 #include <mpegfile.h>
 #include <id3v2tag.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <gtkmm.h>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -24,10 +26,15 @@ Miner::Miner(std::string dir_path) {
   getlogin_r(name, sizeof(name));
   this->username = name;
   this->counter = 0;
+  this->m_liststore = Gtk::ListStore::create(m_Columns);
 }
 
 std::filesystem::path Miner::get_dir_path() {
   return this->dir_path;
+}
+
+Glib::RefPtr<Gtk::ListStore> Miner::get_liststore() {
+  return this->m_liststore;
 }
 
 /*
@@ -61,7 +68,9 @@ void Miner::recursive_search() {
     const std::string & str = dirEntry.path().string();
     if (dirEntry.is_directory()) continue;
     if (has_suffix(str, ".mp3")) {
-      add_to_database(std::filesystem::absolute(dirEntry.path()));
+      std::filesystem::path song_path = std::filesystem::absolute(dirEntry.path());
+      add_to_database(song_path);
+      add_to_list(song_path);
     }
   }
 }
@@ -251,6 +260,16 @@ int Miner::add_to_database(std::filesystem::path path) {
   counter++;
   delete tag;
   sqlite3_close(db);
+  return 0;
+}
+
+int Miner::add_to_list(std::filesystem::path path) {
+  auto iter = m_liststore->append();
+  auto row = *iter;
+  Decoder decoder = Decoder(path.c_str());
+  TagLib::ID3v2::Tag* tag = decoder.get_tag();
+  row[m_Columns.m_col_text] = tag->title().to8Bit();
+
   return 0;
 }
 

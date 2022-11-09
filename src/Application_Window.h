@@ -5,6 +5,7 @@
 #pragma once
 
 #include <gtkmm.h>
+#include "Miner.h"
 
 class Application_Window: public Gtk::ApplicationWindow {
  public:
@@ -12,7 +13,7 @@ class Application_Window: public Gtk::ApplicationWindow {
                      const Glib::RefPtr<Gtk::Builder>& refBuilder);
 
   static Application_Window* create();
-
+  
  protected:
   // Signal handlers
   void on_search_text_changed();
@@ -22,8 +23,12 @@ class Application_Window: public Gtk::ApplicationWindow {
   Gtk::SearchBar* m_searchbar;
   Gtk::SearchEntry* m_searchentry;
   Gtk::TreeView* m_treeview;
-  Gtk::TreeModel* m_treemodel;
+  Glib::RefPtr<Gtk::TreeModel> m_treemodel;
   Gtk::ToggleButton* m_list;
+  Gtk::ToggleButton* m_add;
   Gtk::ScrolledWindow* m_scrolledwindow;
+  Gtk::MediaControls* m_mediacontrols;
+  Gtk::TreeViewColumn* m_treecolumn;
+  Glib::RefPtr<Miner> m_miner;
   Glib::RefPtr<Glib::Binding> m_prop_binding;
 };

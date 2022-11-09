@@ -6,6 +6,7 @@
 
 #include <string>
 #include <filesystem>
+#include <gtkmm.h>
 
 /**
  * Class to locate the .mp3 files
@@ -21,6 +22,8 @@ class Miner {
   /** The name of the current user executing
       the application */
   std::string username;
+  /** The list that holds the mined data */
+  Glib::RefPtr<Gtk::ListStore> m_liststore;
   /** It holds the number of registered songs
       in the current directory */
   int counter;
@@ -41,6 +44,13 @@ class Miner {
   std::filesystem::path get_dir_path();
 
   /**
+   * Method that returns the data list.
+   * @return the song names list.
+   *
+   */
+  Glib::RefPtr<Gtk::ListStore> get_liststore();  
+  
+  /**
    * Method that searches recursively for
    * .mp3 files in a certain directory.
    *
@@ -54,6 +64,14 @@ class Miner {
    *
    */
   int add_to_database(std::filesystem::path song_path);
+
+  /**
+   * Method that adds a song file to the data list.
+   * @param path the path of the song that is being added.
+   * @return 0, if the song was added; -1, otherwise.
+   *
+   */
+  int add_to_list(std::filesystem::path path);
 
   /**
    * Method that verifies if the item that is being added

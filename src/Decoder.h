@@ -7,15 +7,16 @@
 
 #include <mpegfile.h>
 #include <filesystem>
+#include <gtkmm/mediafile.h>
 
 /**
  * Class to play .mp3 files.
  *
  */
 class Decoder {
-  /** The path of the .mp3 song */
-  const char* song_path;
-
+  /** The song file */
+  Glib::RefPtr<Gtk::MediaFile> song_file;
+  
  public:
   /**
    * Class constructor
@@ -24,11 +25,11 @@ class Decoder {
   explicit Decoder(const char* song_path);
 
   /**
-   * Method that returns the path of the song.
-   * @return the path of the song;
+   * Method that returns the song file.
+   * @return the song file.
    *
    */
-  const char* get_song_path();
+  Glib::RefPtr<Gtk::MediaFile> get_song_path();
 
   /**
    * Method that plays th requested song

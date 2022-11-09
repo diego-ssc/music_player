@@ -57,7 +57,7 @@ exe = executable('music_player', src,
 
 catch_sources = [ 'test/test_miner.cc' ]
 catch_exe = executable ( 'test_miner', catch_sources,
-                         dependencies : [ catch2, sqlite ],
+                         dependencies : [ catch2, sqlite, gtk ],
                          include_directories: [ includes ],
                          link_with: [ music_player ])
 

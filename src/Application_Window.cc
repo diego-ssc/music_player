@@ -4,6 +4,7 @@
  */
 
 #include "Application_Window.h"
+#include "Miner.h"
 #include <stdexcept>
 
 Application_Window::Application_Window
@@ -16,6 +17,9 @@ Application_Window::Application_Window
     m_treeview(nullptr),
     m_treemodel(nullptr),
     m_list(nullptr),
+    m_add(nullptr),
+    m_treecolumn(nullptr),
+    m_miner(nullptr),
     m_prop_binding() {
   m_search = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_search_button");
   if (!m_search)
@@ -37,17 +41,29 @@ Application_Window::Application_Window
     throw std::runtime_error
       ("No \"song_list\" object in music_player_window.ui");
 
-  // m_treemodel // Get from tree_view
+  // m_treemodel = m_treeview->get_model();
 
+  // m_treecolumn = m_treeview->get_column(0);
+  
   m_list = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_song_list");
   if (!m_list)
     throw std::runtime_error
       ("No \"toggle_song_list\" object in music_player_window.ui");
 
+  m_add = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_add_directory");
+  if (!m_add)
+    throw std::runtime_error
+      ("No \"toggle_add_directory\" object in music_player_window.ui");
+  
   m_scrolledwindow = m_refBuilder->get_widget<Gtk::ScrolledWindow>("song_scroll");
   if (!m_scrolledwindow)
     throw std::runtime_error
       ("No \"m_scrolled_window\" object in music_player_window.ui");
+
+  m_mediacontrols = m_refBuilder->get_widget<Gtk::MediaControls>("media_controls");
+  if (!m_mediacontrols)
+    throw std::runtime_error
+      ("No \"media_controls\" object in music_player_window.ui");
 
   // BIND PROPERTIES
 
@@ -62,6 +78,9 @@ Application_Window::Application_Window
                                                 m_scrolledwindow->property_visible(),
                                                 Glib::Binding::Flags::BIDIRECTIONAL);
 
+  // m_prop_binding = Glib::Binding::bind_property(m_add->property_active(),
+  //                                             m_scrolledwindow->property_visible(),
+  //                                             Glib::Binding::Flags::BIDIRECTIONAL);
   // SIGNAL HANDLERS
   m_searchentry->signal_search_changed().connect
     (sigc::mem_fun(*this, &Application_Window::on_search_text_changed));
