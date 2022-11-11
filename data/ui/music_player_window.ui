@@ -36,7 +36,7 @@
             <property name="position">720</property>
             <property name="position-set">1</property>
             <child>
-              <object class="GtkAspectFrame">
+              <object class="GtkAspectFrame" id="song_image">
                 <property name="width-request">1020</property>
                 <property name="height-request">320</property>
                 <child>

@@ -17,18 +17,25 @@ class Application_Window: public Gtk::ApplicationWindow {
  protected:
   // Signal handlers
   void on_search_text_changed();
+  void on_toggle_add_directory();
+  void on_selection_changed();
+  void on_folder_dialog_response
+  (int response_id, Gtk::FileChooserDialog* dialog);
 
+  void create_miner(std::string path);
+  
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
   Gtk::ToggleButton* m_search;
   Gtk::SearchBar* m_searchbar;
   Gtk::SearchEntry* m_searchentry;
   Gtk::TreeView* m_treeview;
-  Glib::RefPtr<Gtk::TreeModel> m_treemodel;
   Gtk::ToggleButton* m_list;
   Gtk::ToggleButton* m_add;
   Gtk::ScrolledWindow* m_scrolledwindow;
   Gtk::MediaControls* m_mediacontrols;
-  Gtk::TreeViewColumn* m_treecolumn;
-  Glib::RefPtr<Miner> m_miner;
+  Miner* m_miner;
+  Glib::RefPtr<Gtk::TreeSelection> m_treeselection;
+  Gtk::AspectFrame* m_frame;
   Glib::RefPtr<Glib::Binding> m_prop_binding;
 };
+        

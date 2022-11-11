@@ -6,6 +6,7 @@
 #include "Application_Window.h"
 #include "Miner.h"
 #include <stdexcept>
+#include <iostream>
 
 Application_Window::Application_Window
 (BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder)
@@ -15,11 +16,11 @@ Application_Window::Application_Window
     m_searchbar(nullptr),
     m_searchentry(nullptr),
     m_treeview(nullptr),
-    m_treemodel(nullptr),
     m_list(nullptr),
     m_add(nullptr),
-    m_treecolumn(nullptr),
     m_miner(nullptr),
+    m_treeselection(nullptr),
+    m_frame(nullptr),
     m_prop_binding() {
   m_search = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_search_button");
   if (!m_search)
@@ -41,9 +42,8 @@ Application_Window::Application_Window
     throw std::runtime_error
       ("No \"song_list\" object in music_player_window.ui");
 
-  // m_treemodel = m_treeview->get_model();
-
-  // m_treecolumn = m_treeview->get_column(0);
+  m_treeselection = m_treeview->get_selection();
+  m_treeselection->set_mode(Gtk::SelectionMode::SINGLE);
   
   m_list = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_song_list");
   if (!m_list)
@@ -65,6 +65,11 @@ Application_Window::Application_Window
     throw std::runtime_error
       ("No \"media_controls\" object in music_player_window.ui");
 
+  m_frame = m_refBuilder->get_widget<Gtk::AspectFrame>("song_image");
+  if (!m_frame)
+    throw std::runtime_error
+      ("No \"song_image\" object in music_player_window.ui");
+
   // BIND PROPERTIES
 
   /* Bidirectional binding, the toggle button is gonna be active whenever
@@ -78,13 +83,16 @@ Application_Window::Application_Window
                                                 m_scrolledwindow->property_visible(),
                                                 Glib::Binding::Flags::BIDIRECTIONAL);
 
-  // m_prop_binding = Glib::Binding::bind_property(m_add->property_active(),
-  //                                             m_scrolledwindow->property_visible(),
-  //                                             Glib::Binding::Flags::BIDIRECTIONAL);
   // SIGNAL HANDLERS
   m_searchentry->signal_search_changed().connect
     (sigc::mem_fun(*this, &Application_Window::on_search_text_changed));
 
+  m_add->signal_toggled().connect
+    (sigc::mem_fun(*this, &Application_Window::on_toggle_add_directory));
+
+  m_treeselection->signal_changed().connect
+    (sigc::mem_fun(*this, &Application_Window::on_selection_changed));
+  
   m_scrolledwindow->hide();
 }
 
@@ -97,8 +105,15 @@ Application_Window* Application_Window::create() {
   if (!window)
     throw std::runtime_error
       ("No \"MusicPlayerApplicationWindow\" object in music_player_window.iu");
-
+  
   return window;
+}
+
+void Application_Window::create_miner(std::string path) {
+  m_miner = new Miner(path);
+  m_miner->recursive_search();
+  m_treeview->set_model(m_miner->get_liststore());
+  delete m_miner;
 }
 
 void Application_Window::on_search_text_changed() {
@@ -106,3 +121,49 @@ void Application_Window::on_search_text_changed() {
   if (text.empty())
     return;
 }
+
+void Application_Window::on_toggle_add_directory() {
+  if (!m_add->get_active())
+    return;
+  Gtk::FileChooserDialog* m_dialog = new Gtk::FileChooserDialog
+    ("Please choose a folder", Gtk::FileChooser::Action::SELECT_FOLDER);
+
+  m_dialog->set_transient_for(*this);
+  m_dialog->set_modal(true);
+  m_dialog->signal_response().connect
+    (sigc::bind(sigc::mem_fun(*this, &Application_Window::
+                              on_folder_dialog_response), m_dialog));
+
+  m_dialog->add_button("_Cancel", Gtk::ResponseType::CANCEL);
+  m_dialog->add_button("_Open", Gtk::ResponseType::OK);
+    
+  m_dialog->show();
+}
+
+void Application_Window::on_folder_dialog_response
+(int response_id, Gtk::FileChooserDialog* dialog) {
+  switch (response_id) {
+  case Gtk::ResponseType::OK: {
+    create_miner(dialog->get_file()->get_path());
+    break;
+  }
+  default:
+    break;
+  }
+  dialog->unset_transient_for();
+  m_add->set_active(false);
+  delete dialog;
+}
+
+void Application_Window::on_selection_changed() {
+  auto iter = m_treeselection->get_selected();
+  if (iter) {
+    auto row = *iter;
+    std::string value;
+    row.get_value(1, value);
+    Glib::RefPtr<Gtk::MediaFile> file =
+      Gtk::MediaFile::create_for_filename(value);
+    m_mediacontrols->set_media_stream(file);
+  }
+}
+

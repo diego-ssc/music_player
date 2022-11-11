@@ -269,7 +269,7 @@ int Miner::add_to_list(std::filesystem::path path) {
   Decoder decoder = Decoder(path.c_str());
   TagLib::ID3v2::Tag* tag = decoder.get_tag();
   row[m_Columns.m_col_text] = tag->title().to8Bit();
-
+  row[m_Columns.m_col_path] = std::string(path);
   return 0;
 }
 
