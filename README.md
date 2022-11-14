@@ -1,23 +1,21 @@
 # Setup
 
-Run
+Run, in the root directory:
 ```plaintext
 meson build
 ```
-in the root directory.
 
-Then
+
+Then, to compile the program:
 ```plaintext
 meson compile -C build/
 ```
-to compile the program.
 
 # Usage
-Run
+Run, in the root directory:
 ```plaintext
 ./build/music_player
 ```
-in the root directory.
 
 A window will pop up.
 Three buttons will be available to trigger.
