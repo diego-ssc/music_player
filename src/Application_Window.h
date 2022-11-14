@@ -44,5 +44,6 @@ class Application_Window: public Gtk::ApplicationWindow {
   Database_Queries* m_queries;
   Gtk::Label* m_label;
   Decoder m_decoder;
+  Gtk::MediaFile* m_file;
   Glib::RefPtr<Glib::Binding> m_prop_binding;
 };

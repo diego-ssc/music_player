@@ -31,6 +31,7 @@ Application_Window::Application_Window
     m_frame(nullptr),
     m_queries(nullptr),
     m_label(nullptr),
+    m_file(nullptr),
     m_decoder(""),
     m_prop_binding() {
   m_queries = new Database_Queries();
@@ -145,6 +146,8 @@ void Application_Window::create_miner(std::string path) {
 
 void Application_Window::play_song(std::string song_path,
                                   std::string song_name) {
+  if (m_file != nullptr)
+    delete m_file;
   m_decoder = Decoder(song_path.c_str());
   TagLib::ID3v2::Tag* tag = m_decoder.get_tag();
   TagLib::ID3v2::FrameList l = tag->frameListMap()["APIC"];
@@ -191,12 +194,15 @@ void Application_Window::play_song(std::string song_path,
   m_label->set_text("Now Playing: " + song_name);
   Glib::RefPtr<Gtk::MediaFile> file =
     Gtk::MediaFile::create_for_filename(song_path);
+
   m_mediacontrols->set_media_stream(file);
+    file.reset(m_file);
 }
 
-std::list<std::string>* parse_entry_flags(std::string &text) {
-  std::cout << text << std::endl;
+std::list<std::string>* parse_entry_flags(std::string &text,
+                                          long unsigned int &flag_beginning) {
   int a = text.find("::", 0);
+  flag_beginning = 0;
   if (a == -1)
     return nullptr;
 
@@ -212,6 +218,9 @@ std::list<std::string>* parse_entry_flags(std::string &text) {
       j--;
     }
     sub_str = str.substr(j + 1, (i-1)-j);
+    if (flag_beginning == 0)
+      flag_beginning = j + 1; 
+    
     j = i+2;
     
     if (j == str.size()) {
@@ -232,7 +241,8 @@ std::list<std::string>* parse_entry_flags(std::string &text) {
   return list;
 }
 
-std::string* parse_song_name(std::string &text) {
+std::string* parse_song_name(std::string &text,
+                             long unsigned int flag_beginning) {
   if (text.empty())
     return nullptr;
 
@@ -242,27 +252,35 @@ std::string* parse_song_name(std::string &text) {
     if (text.at(i) == ' ')
       break;
     i++;
+    if (i == flag_beginning)
+      break;
   }
-  std::string *sub_str = new std::string(text.substr(0, i-1)); 
+  std::string *sub_str = new std::string(text.substr(0, i));
   return sub_str;
 }
 
 void Application_Window::on_search_text_entered() {
   std::string path;
   std::string text = m_searchentry->get_text();
-  std::string *name = parse_song_name(text);
-  if (name != nullptr) {
-    std::cout << "name: " << name << std::endl;
-    path = m_queries->get_path_from_title(*name);
-  }
-
-  std::list<std::string> *flags = parse_entry_flags(text);
+  long unsigned int flag_beginning = 0;
+  std::list<std::string> *flags = parse_entry_flags(text,
+                                                    flag_beginning);
 
   if (flags != nullptr) {
     std::list<std::string>::iterator it;
     for (it = flags->begin(); it != flags->end(); ++it) {
-      std::cout << *it << std::endl;
     } 
+  }
+
+  std::string *name;
+  if (flag_beginning == 0) {
+    name = new std::string(text);
+    path = m_queries->get_path_from_title(*name);
+  } else {
+    name = parse_song_name(text, flag_beginning);
+    if (name != nullptr) {
+      path = m_queries->get_path_from_title(*name);
+    }    
   }
 
   if (!path.empty())
