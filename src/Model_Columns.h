@@ -9,11 +9,11 @@ class Model_Columns : public Gtk::TreeModelColumnRecord {
  public:
 
   Model_Columns() {
-    add(m_col_text);
+    add(m_col_name);
     add(m_col_path);
   }
 
-  Gtk::TreeModelColumn<Glib::ustring> m_col_text;
+  Gtk::TreeModelColumn<Glib::ustring> m_col_name;
   Gtk::TreeModelColumn<Glib::ustring> m_col_path;
 };    
 

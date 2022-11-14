@@ -7,6 +7,14 @@
 #include "Miner.h"
 #include <stdexcept>
 #include <iostream>
+#include <filesystem>
+#include <id3v2tag.h>
+#include <tlist.h>
+#include <id3v2frame.h>
+#include <gdkmm/pixbufloader.h>
+#include <attachedpictureframe.h>
+#include <gtkmm/searchentry.h>
+#include <list>
 
 Application_Window::Application_Window
 (BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder)
@@ -21,7 +29,12 @@ Application_Window::Application_Window
     m_miner(nullptr),
     m_treeselection(nullptr),
     m_frame(nullptr),
+    m_queries(nullptr),
+    m_label(nullptr),
+    m_decoder(""),
     m_prop_binding() {
+  m_queries = new Database_Queries();
+    
   m_search = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_search_button");
   if (!m_search)
     throw std::runtime_error
@@ -32,19 +45,26 @@ Application_Window::Application_Window
     throw std::runtime_error
       ("No \"search_bar\" object in music_player_window.ui");
 
-  m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("search_entry");
+  m_searchentry = m_refBuilder->get_widget<Gtk::Entry>("search_entry");
   if (!m_searchentry)
     throw std::runtime_error
       ("No \"search_entry\" object in music_player_window.ui");
+  m_searchentry->set_placeholder_text("Search");
+
+  m_searchentry->set_completion(m_queries->get_completion());
 
   m_treeview = m_refBuilder->get_widget<Gtk::TreeView>("song_list");
   if (!m_treeview)
     throw std::runtime_error
       ("No \"song_list\" object in music_player_window.ui");
-
+  
+  m_treeview->set_model(m_queries->get_liststore());
+  m_queries->populate_list();
+  m_queries->populate_completion();
+  
   m_treeselection = m_treeview->get_selection();
   m_treeselection->set_mode(Gtk::SelectionMode::SINGLE);
-  
+
   m_list = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_song_list");
   if (!m_list)
     throw std::runtime_error
@@ -54,7 +74,7 @@ Application_Window::Application_Window
   if (!m_add)
     throw std::runtime_error
       ("No \"toggle_add_directory\" object in music_player_window.ui");
-  
+
   m_scrolledwindow = m_refBuilder->get_widget<Gtk::ScrolledWindow>("song_scroll");
   if (!m_scrolledwindow)
     throw std::runtime_error
@@ -70,6 +90,11 @@ Application_Window::Application_Window
     throw std::runtime_error
       ("No \"song_image\" object in music_player_window.ui");
 
+  m_label = m_refBuilder->get_widget<Gtk::Label>("song_playing_label");
+  if (!m_label)
+    throw std::runtime_error
+      ("No \"song_playing_label\" object in music_player_window.ui");
+  
   // BIND PROPERTIES
 
   /* Bidirectional binding, the toggle button is gonna be active whenever
@@ -84,15 +109,15 @@ Application_Window::Application_Window
                                                 Glib::Binding::Flags::BIDIRECTIONAL);
 
   // SIGNAL HANDLERS
-  m_searchentry->signal_search_changed().connect
-    (sigc::mem_fun(*this, &Application_Window::on_search_text_changed));
+  m_searchentry->signal_activate().connect // search
+    (sigc::mem_fun(*this, &Application_Window::on_search_text_entered));
 
   m_add->signal_toggled().connect
     (sigc::mem_fun(*this, &Application_Window::on_toggle_add_directory));
 
   m_treeselection->signal_changed().connect
     (sigc::mem_fun(*this, &Application_Window::on_selection_changed));
-  
+
   m_scrolledwindow->hide();
 }
 
@@ -105,21 +130,146 @@ Application_Window* Application_Window::create() {
   if (!window)
     throw std::runtime_error
       ("No \"MusicPlayerApplicationWindow\" object in music_player_window.iu");
-  
+
   return window;
 }
 
 void Application_Window::create_miner(std::string path) {
   m_miner = new Miner(path);
+  auto model = m_queries->get_liststore();
+  m_miner->set_liststore(model);
   m_miner->recursive_search();
-  m_treeview->set_model(m_miner->get_liststore());
+  m_queries->populate_completion();
   delete m_miner;
 }
 
-void Application_Window::on_search_text_changed() {
-  const auto text = m_searchentry->get_text();
+void Application_Window::play_song(std::string song_path,
+                                  std::string song_name) {
+  m_decoder = Decoder(song_path.c_str());
+  TagLib::ID3v2::Tag* tag = m_decoder.get_tag();
+  TagLib::ID3v2::FrameList l = tag->frameListMap()["APIC"];
+  TagLib::ID3v2::AttachedPictureFrame *pic_frame;
+  void *src_image;
+  FILE *jpeg_file;
+
+  char name[1024];
+  getlogin_r(name, sizeof(name));
+  std::string username = name;
+
+  std::filesystem::path path_str= "/home/" + username +
+    "/.local/share/music_player/media";
+
+  if (!std::filesystem::exists(path_str))
+    std::filesystem::create_directory(path_str);
+
+  path_str += "/cover.jpg";
+  const char* path = path_str.c_str();
+  jpeg_file = fopen(path, "wb");
+  unsigned long size;
+
+  if (!l.isEmpty()) {
+    for(TagLib::ID3v2::FrameList::ConstIterator it = l.begin(); it != l.end(); ++it) {
+      pic_frame = (TagLib::ID3v2::AttachedPictureFrame *)(*it) ;
+      if (pic_frame->type() ==
+          TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
+        size = pic_frame->picture().size();
+        src_image = malloc(size);
+        if (src_image) {
+          memcpy(src_image, pic_frame->picture().data(), size);
+          fwrite(src_image,size,1, jpeg_file);
+          fclose(jpeg_file);
+          free(src_image);
+        }
+      }
+    }
+
+    Gtk::Image image = Gtk::Image(path);
+    image.set_size_request(800, 280);
+    image.set_icon_size(Gtk::IconSize::NORMAL);
+    m_frame->set_child(image);
+  }
+  m_label->set_text("Now Playing: " + song_name);
+  Glib::RefPtr<Gtk::MediaFile> file =
+    Gtk::MediaFile::create_for_filename(song_path);
+  m_mediacontrols->set_media_stream(file);
+}
+
+std::list<std::string>* parse_entry_flags(std::string &text) {
+  std::cout << text << std::endl;
+  int a = text.find("::", 0);
+  if (a == -1)
+    return nullptr;
+
+  std::list<std::string>::iterator it;
+  long unsigned int i,j;
+  std::string str = text;
+  std::string sub_str;
+  std::list<std::string>* list = new std::list<std::string>();
+  while (a != -1) {
+    i = str.find_first_of("::");
+    j = i;
+    while(str.at(j) != ' ') {
+      j--;
+    }
+    sub_str = str.substr(j + 1, (i-1)-j);
+    j = i+2;
+    
+    if (j == str.size()) {
+      a = str.find("::", i + 1);
+      continue;
+    }
+
+    list->push_back(sub_str);
+    while(str.at(j) != ' ') {
+      j++;
+      if (j == str.size())
+        break;
+    }
+    list->push_back(str.substr(i + 2, (j)-(i+1)));
+    
+    a = str.find("::", i + 2);
+  }
+  return list;
+}
+
+std::string* parse_song_name(std::string &text) {
   if (text.empty())
-    return;
+    return nullptr;
+
+  long unsigned int i = 0;
+  while (i != text.size()) {
+    
+    if (text.at(i) == ' ')
+      break;
+    i++;
+  }
+  std::string *sub_str = new std::string(text.substr(0, i-1)); 
+  return sub_str;
+}
+
+void Application_Window::on_search_text_entered() {
+  std::string path;
+  std::string text = m_searchentry->get_text();
+  std::string *name = parse_song_name(text);
+  if (name != nullptr) {
+    std::cout << "name: " << name << std::endl;
+    path = m_queries->get_path_from_title(*name);
+  }
+
+  std::list<std::string> *flags = parse_entry_flags(text);
+
+  if (flags != nullptr) {
+    std::list<std::string>::iterator it;
+    for (it = flags->begin(); it != flags->end(); ++it) {
+      std::cout << *it << std::endl;
+    } 
+  }
+
+  if (!path.empty())
+    play_song(path, *name);
+  
+  m_searchentry->set_text("");
+    
 }
 
 void Application_Window::on_toggle_add_directory() {
@@ -136,7 +286,7 @@ void Application_Window::on_toggle_add_directory() {
 
   m_dialog->add_button("_Cancel", Gtk::ResponseType::CANCEL);
   m_dialog->add_button("_Open", Gtk::ResponseType::OK);
-    
+
   m_dialog->show();
 }
 
@@ -144,6 +294,7 @@ void Application_Window::on_folder_dialog_response
 (int response_id, Gtk::FileChooserDialog* dialog) {
   switch (response_id) {
   case Gtk::ResponseType::OK: {
+    dialog->hide();
     create_miner(dialog->get_file()->get_path());
     break;
   }
@@ -159,11 +310,10 @@ void Application_Window::on_selection_changed() {
   auto iter = m_treeselection->get_selected();
   if (iter) {
     auto row = *iter;
-    std::string value;
-    row.get_value(1, value);
-    Glib::RefPtr<Gtk::MediaFile> file =
-      Gtk::MediaFile::create_for_filename(value);
-    m_mediacontrols->set_media_stream(file);
+    std::string path;
+    std::string title;
+    row.get_value(1, path);
+    row.get_value(0, title);
+    play_song(path, title);
   }
 }
-

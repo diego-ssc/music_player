@@ -5,7 +5,6 @@
  */
 #include <gst/gst.h>
 #include "Application.h"
-#include "Miner.h"
 
 int main(int argc, char** argv) {
   auto application = Application::create();

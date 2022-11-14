@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0"/>
-  <!-- <object class="GtkListStore" id="liststore1"> -->
-  <!--   <columns> -->
-  <!--     <column type="gchararray"/> -->
-  <!--   </columns> -->
-  <!-- </object> -->
   <object class="GtkApplicationWindow" id="MusicPlayerApplicationWindow">
     <property name="width-request">1010</property>
     <property name="height-request">570</property>
@@ -19,7 +14,7 @@
             <child type="title">
               <object class="GtkSearchBar" id="search_bar">
                 <property name="child">
-                  <object class="GtkSearchEntry" id="search_entry">
+                  <object class="GtkEntry" id="search_entry">
                     <property name="focusable">1</property>
                   </object>
                 </property>
@@ -38,9 +33,13 @@
             <child>
               <object class="GtkAspectFrame" id="song_image">
                 <property name="width-request">1020</property>
-                <property name="height-request">320</property>
+                <property name="height-request">320</property>    
                 <child>
-                  <placeholder/>
+                  <object class="GtkImage" id="album_image">
+                    <placeholder/>
+                    <property name="width-request">800</property>
+                    <property name="height-request">280</property>
+                  </object>
                 </child>
               </object>
             </child>
@@ -224,7 +223,7 @@
         <child type="end">
           <object class="GtkBox" id="right_box">
             <property name="spacing">6</property>
-            <child>  
+            <child>
               <object class="GtkToggleButton" id="toggle_song_list">
                 <property name="focusable">1</property>
                 <property name="receives-default">1</property>

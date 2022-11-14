@@ -35,6 +35,7 @@ src = [
   'src/Music_Player-main.cc',
   'src/Application.cc',
   'src/Application_Window.cc',
+  'src/Database_Queries.cc',
   gresources
 ]
 
