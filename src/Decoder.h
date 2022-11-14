@@ -16,7 +16,7 @@
 class Decoder {
   /** The song file */
   Glib::RefPtr<Gtk::MediaFile> song_file;
-  
+
  public:
   /**
    * Class constructor
@@ -30,15 +30,6 @@ class Decoder {
    *
    */
   Glib::RefPtr<Gtk::MediaFile> get_song_path();
-
-  /**
-   * Method that plays th requested song
-   * by its path in the filesystem.
-   * @return 0, if the song could be processed;
-   * 0, otherwise.
-   *
-   */
-  int play();
 
   /**
    * Method that returns (if it has one) the

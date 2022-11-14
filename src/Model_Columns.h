@@ -15,7 +15,6 @@ class Model_Columns : public Gtk::TreeModelColumnRecord {
 
   Gtk::TreeModelColumn<Glib::ustring> m_col_name;
   Gtk::TreeModelColumn<Glib::ustring> m_col_path;
-};    
+};
 
 Model_Columns m_Columns;
-

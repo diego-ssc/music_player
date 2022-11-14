@@ -38,7 +38,7 @@ class Database_Queries {
   };
 
   Completion_Record m_completionrecord;
-  
+
  public:
   /**
    * Class constructor.
@@ -60,7 +60,7 @@ class Database_Queries {
    *
    */
   Glib::RefPtr<Gtk::EntryCompletion> get_completion();
-  
+
   /**
    * Method that populates the list
    * linked to the song list.
@@ -74,7 +74,7 @@ class Database_Queries {
    *
    */
   void populate_completion();
-  
+
   /**
    * Method that verifies that every single
    * song stored in the database exists.
@@ -92,4 +92,33 @@ class Database_Queries {
    *
    */
   std::string get_path_from_title(std::string title);
+
+
+  /**
+   * Method that populates the liststore
+   * with the flags.
+   * @param flag the flag.
+   * @param value the flag value.
+   * @param title the song title.
+   * @return the song that fullfills the
+   * paramaters.
+   *
+   */
+  std::string populate_list_by_flag(std::string flag,
+                             std::string value,
+                             std::string title);
+
+  /**
+   * Method that populates the liststore
+   * with the flags.
+   * @param flag the flag.
+   * @param value the flag value.
+   * @param title the song title.
+   * @return the song that fullfills the
+   * paramaters.
+   *
+   */
+  std::string populate_list_by_flag(std::string flag,
+                                    int value,
+                                    std::string title);
 };

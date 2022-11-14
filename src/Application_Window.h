@@ -24,11 +24,27 @@ class Application_Window: public Gtk::ApplicationWindow {
   void on_selection_changed();
   void on_folder_dialog_response
   (int response_id, Gtk::FileChooserDialog* dialog);
-  
+
+  /**
+   * Method that creates the miner
+   * of the current execution.
+   * @param path the path of the directory
+   * where the .mp3 files are located.
+   *
+   */
   void create_miner(std::string path);
+
+  /**
+   * Method that creates the media
+   * stream to play the selected song.
+   * @param song_path the path of the song.
+   * @param song_name the name of the song.
+   *
+   */
   void play_song(std::string song_path,
                  std::string song_name);
-  
+
+  // VIEW WIDGETS
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
   Gtk::ToggleButton* m_search;
   Gtk::SearchBar* m_searchbar;
@@ -45,5 +61,6 @@ class Application_Window: public Gtk::ApplicationWindow {
   Gtk::Label* m_label;
   Decoder m_decoder;
   Gtk::MediaFile* m_file;
+  Glib::RefPtr<Gtk::MediaFile> file;
   Glib::RefPtr<Glib::Binding> m_prop_binding;
 };

@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0"/>
+  <menu id='app-menu'>
+    <section>
+      <item>
+        <attribute name='label' translatable='yes'>_Person</attribute>
+        <attribute name='action'>person</attribute>
+      </item>
+      <item>
+        <attribute name='label' translatable='yes'>_Group</attribute>
+        <attribute name='action'>group</attribute>
+      </item>
+    </section>
+  </menu>
+  <object class="GtkPopoverMenu" id="menu">
+    <property name="menu-model">app-menu</property>
+  </object>
   <object class="GtkApplicationWindow" id="MusicPlayerApplicationWindow">
     <property name="width-request">1010</property>
     <property name="height-request">570</property>
@@ -86,76 +101,6 @@
         <child>
           <object class="GtkMediaControls" id="media_controls"/>
         </child>
-        <!-- <child> -->
-        <!--   <object class="GtkProgressBar"> -->
-        <!--     <property name="show-text">1</property> -->
-        <!--     <property name="ellipsize">start</property> -->
-        <!--   </object> -->
-        <!-- </child> -->
-        <!-- <child> -->
-        <!--   <object class="GtkActionBar"> -->
-        <!--     <property name="valign">fill</property> -->
-        <!--     <property name="vexpand">0</property> -->
-        <!--     <child> -->
-        <!--       <object class="GtkButton" id="prev_button"> -->
-        <!--         <property name="focusable">1</property> -->
-        <!--         <property name="receives-default">1</property> -->
-        <!--         <property name="has-frame">0</property> -->
-        <!--         <child> -->
-        <!--           <object class="GtkImage"> -->
-        <!--             <property name="icon-name">media-skip-backward</property> -->
-        <!--           </object> -->
-        <!--         </child> -->
-        <!--       </object> -->
-        <!--     </child> -->
-        <!--     <child type="center"> -->
-        <!--       <object class="GtkButton" id="play_button"> -->
-        <!--         <property name="focusable">1</property> -->
-        <!--         <property name="receives-default">1</property> -->
-        <!--         <property name="has-frame">0</property> -->
-        <!--         <child> -->
-        <!--           <object class="GtkImage"> -->
-        <!--             <property name="icon-name">media-playback-start</property> -->
-        <!--           </object> -->
-        <!--         </child> -->
-        <!--       </object> -->
-        <!--     </child> -->
-        <!--     <child type="end"> -->
-        <!--       <object class="GtkVolumeButton"> -->
-        <!--         <property name="focusable">1</property> -->
-        <!--         <property name="focus-on-click">0</property> -->
-        <!--         <property name="receives-default">1</property> -->
-        <!--         <property name="orientation">vertical</property> -->
-        <!--         <property name="icons">audio-volume-muted-symbolic -->
-        <!--         audio-volume-high-symbolic -->
-        <!--         audio-volume-low-symbolic -->
-        <!--         audio-volume-medium-symbolic</property> -->
-        <!--         <child internal-child="plus_button"> -->
-        <!--           <object class="GtkButton"> -->
-        <!--             <property name="visible">0</property> -->
-        <!--           </object> -->
-        <!--         </child> -->
-        <!--         <child internal-child="minus_button"> -->
-        <!--           <object class="GtkButton"> -->
-        <!--             <property name="visible">0</property> -->
-        <!--           </object> -->
-        <!--         </child> -->
-        <!--       </object> -->
-        <!--     </child> -->
-        <!--     <child type="end">  -->
-        <!--       <object class="GtkButton" id="next_button"> -->
-        <!--         <property name="focusable">1</property> -->
-        <!--         <property name="receives-default">1</property> -->
-        <!--         <property name="has-frame">0</property> -->
-        <!--         <child> -->
-        <!--           <object class="GtkImage"> -->
-        <!--             <property name="icon-name">media-skip-forward</property> -->
-        <!--           </object> -->
-        <!--         </child> -->
-        <!--       </object> -->
-        <!--     </child> -->
-        <!--   </object> -->
-        <!-- </child> -->
       </object>
     </child>
     <child type="titlebar">
@@ -188,16 +133,11 @@
           <object class="GtkBox" id="left_box">
             <property name="spacing">6</property>
             <child>
-              <object class="GtkToggleButton" id="toggle_about_button">
-                <property name="focusable">1</property>
-                <property name="tooltip-text" translatable="1">Toggle connection</property>
-                <child>
-                  <object class="GtkImage" id="connect_image">
-                    <property name="icon-name">network-wired-symbolic</property>
-                    <property name="icon_size">normal</property>
-                  </object>
-                </child>
-              </object>
+              <!-- <object class="GtkMenuButton"> -->
+              <!--   <property name="menu-model">app-menu</property> -->
+              <!--   <property name="popover">menu</property> -->
+              <!--   <property name="icon-name">avatar-default-symbolic</property> -->
+              <!-- </object> -->
             </child>
             <child>
               <object class="GtkToggleButton" id="toggle_add_directory">

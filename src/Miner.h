@@ -40,7 +40,7 @@ class Miner {
     /** It holds the number of registered songs
       in the current directory */
   int counter;
-  
+
   /**
    * Class constructor.
    * @param dir_path The path of the target directory.
@@ -77,7 +77,7 @@ class Miner {
    *
    */
   void set_liststore(Glib::RefPtr<Gtk::ListStore>& list);
-  
+
   /**
    * Method that searches recursively for
    * .mp3 files in a certain directory.

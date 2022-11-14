@@ -55,7 +55,7 @@ Miner::Miner(std::string dir_path) {
       sqlite3_free(zErrMsg);
     }
     int c = atoi(callback_result);
-    this->counter = ++c; 
+    this->counter = ++c;
   } else {
     this->counter = 0;
   }
@@ -124,15 +124,15 @@ int Miner::add_to_database(std::filesystem::path path) {
   int rc;
   const char *sql;
 
-  if (!database_exists()) 
+  if (!database_exists())
     create_database();
-  
-  
+
+
   TagLib::String song_path = TagLib::String(path);
   replace_single_quotation_marks(song_path);
   if (is_in_database("rolas", "path", song_path.to8Bit()))
     return 0;
-  
+
   Decoder decoder = Decoder(path.c_str());
   TagLib::ID3v2::Tag* tag = decoder.get_tag();
   rc = sqlite3_open(("/home/" + username + "/.local/share/"
@@ -196,7 +196,7 @@ int Miner::add_to_database(std::filesystem::path path) {
   auto row = *iter;
   row.set_value(0, title.to8Bit());
   row.set_value(1, std::string(path));
-  
+
   std::string str_counter = std::to_string(counter);
   TagLib::String str = "INSERT INTO rolas (id_rola,id_performer,"       \
     "id_album,path,title,track,year,genre) "                            \
@@ -276,7 +276,7 @@ int Miner::add_to_database(std::filesystem::path path) {
     if (strlen(callback_result) != 0)
       memset(&callback_result[0], 0, sizeof(callback_result));
 
-    str = sqlite_exists("albums", "id_album", "name", album.to8Bit());    
+    str = sqlite_exists("albums", "id_album", "name", album.to8Bit());
     sql = str.toCString(false);
     rc = sqlite3_exec(db, sql, id_reference, 0, &zErrMsg);
     if (rc != SQLITE_OK) {
@@ -309,7 +309,7 @@ bool Miner::is_in_database(std::string database, std::string field,
   char *zErrMsg = 0;
   int rc;
   const char *sql;
-  
+
   rc = sqlite3_open(("/home/" + username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
@@ -348,7 +348,7 @@ void Miner::create_database() {
   char *zErrMsg = 0;
   int rc;
   const char *sql;
-  
+
   std::filesystem::path p =
     "/home/" + username + "/.local/share/music_player";
 
@@ -363,7 +363,7 @@ void Miner::create_database() {
   rc = sqlite3_open(("/home/" + username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
-  
+
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
@@ -379,7 +379,7 @@ void Miner::create_database() {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
   }
-  
+
   sql = "INSERT INTO types (id_type,description) "              \
     "VALUES (0, 'Person'); "                                    \
     "INSERT INTO types (id_type,description) "                  \
@@ -393,7 +393,7 @@ void Miner::create_database() {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
   }
-  
+
   sql = "CREATE TABLE performers("                              \
     "id_performer INT PRIMARY KEY,"                             \
     "id_type      INTEGER,"                                     \

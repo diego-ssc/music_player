@@ -15,6 +15,11 @@
 #include <attachedpictureframe.h>
 #include <gtkmm/searchentry.h>
 #include <list>
+#include <chrono>
+#include <thread>
+#include <mutex>
+
+std::mutex m_play;
 
 Application_Window::Application_Window
 (BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder)
@@ -31,11 +36,12 @@ Application_Window::Application_Window
     m_frame(nullptr),
     m_queries(nullptr),
     m_label(nullptr),
-    m_file(nullptr),
     m_decoder(""),
+    m_file(nullptr),
+    file(nullptr),
     m_prop_binding() {
   m_queries = new Database_Queries();
-    
+
   m_search = m_refBuilder->get_widget<Gtk::ToggleButton>("toggle_search_button");
   if (!m_search)
     throw std::runtime_error
@@ -58,11 +64,11 @@ Application_Window::Application_Window
   if (!m_treeview)
     throw std::runtime_error
       ("No \"song_list\" object in music_player_window.ui");
-  
+
   m_treeview->set_model(m_queries->get_liststore());
   m_queries->populate_list();
   m_queries->populate_completion();
-  
+
   m_treeselection = m_treeview->get_selection();
   m_treeselection->set_mode(Gtk::SelectionMode::SINGLE);
 
@@ -95,7 +101,7 @@ Application_Window::Application_Window
   if (!m_label)
     throw std::runtime_error
       ("No \"song_playing_label\" object in music_player_window.ui");
-  
+
   // BIND PROPERTIES
 
   /* Bidirectional binding, the toggle button is gonna be active whenever
@@ -145,9 +151,14 @@ void Application_Window::create_miner(std::string path) {
 }
 
 void Application_Window::play_song(std::string song_path,
-                                  std::string song_name) {
+                                   std::string song_name) {
   if (m_file != nullptr)
     delete m_file;
+  Glib::RefPtr<Gtk::MediaStream> stream =
+    m_mediacontrols->get_media_stream();
+  if (stream != nullptr)
+    stream->ended();
+
   m_decoder = Decoder(song_path.c_str());
   TagLib::ID3v2::Tag* tag = m_decoder.get_tag();
   TagLib::ID3v2::FrameList l = tag->frameListMap()["APIC"];
@@ -192,11 +203,13 @@ void Application_Window::play_song(std::string song_path,
     m_frame->set_child(image);
   }
   m_label->set_text("Now Playing: " + song_name);
-  Glib::RefPtr<Gtk::MediaFile> file =
-    Gtk::MediaFile::create_for_filename(song_path);
+  if (file != nullptr) {
+    file.reset(m_file);
+    delete m_file;
+  }
+  file = Gtk::MediaFile::create_for_filename(song_path);
 
   m_mediacontrols->set_media_stream(file);
-    file.reset(m_file);
 }
 
 std::list<std::string>* parse_entry_flags(std::string &text,
@@ -219,10 +232,10 @@ std::list<std::string>* parse_entry_flags(std::string &text,
     }
     sub_str = str.substr(j + 1, (i-1)-j);
     if (flag_beginning == 0)
-      flag_beginning = j + 1; 
-    
+      flag_beginning = j + 1;
+
     j = i+2;
-    
+
     if (j == str.size()) {
       a = str.find("::", i + 1);
       continue;
@@ -235,7 +248,7 @@ std::list<std::string>* parse_entry_flags(std::string &text,
         break;
     }
     list->push_back(str.substr(i + 2, (j)-(i+1)));
-    
+
     a = str.find("::", i + 2);
   }
   return list;
@@ -248,14 +261,11 @@ std::string* parse_song_name(std::string &text,
 
   long unsigned int i = 0;
   while (i != text.size()) {
-    
-    if (text.at(i) == ' ')
-      break;
     i++;
     if (i == flag_beginning)
       break;
   }
-  std::string *sub_str = new std::string(text.substr(0, i));
+  std::string *sub_str = new std::string(text.substr(0, i-1));
   return sub_str;
 }
 
@@ -265,13 +275,8 @@ void Application_Window::on_search_text_entered() {
   long unsigned int flag_beginning = 0;
   std::list<std::string> *flags = parse_entry_flags(text,
                                                     flag_beginning);
-
-  if (flags != nullptr) {
-    std::list<std::string>::iterator it;
-    for (it = flags->begin(); it != flags->end(); ++it) {
-    } 
-  }
-
+  std::string flag;
+  std::string value;
   std::string *name;
   if (flag_beginning == 0) {
     name = new std::string(text);
@@ -280,14 +285,24 @@ void Application_Window::on_search_text_entered() {
     name = parse_song_name(text, flag_beginning);
     if (name != nullptr) {
       path = m_queries->get_path_from_title(*name);
-    }    
+    }
+  }
+
+  if (flags != nullptr) {
+    std::list<std::string>::iterator it;
+    for (it = flags->begin(); it != flags->end(); ++it) {
+      flag = *it;
+      ++it;
+      value = *it;
+      m_queries->populate_list_by_flag(flag, value, *name);
+    }
   }
 
   if (!path.empty())
     play_song(path, *name);
-  
+
   m_searchentry->set_text("");
-    
+
 }
 
 void Application_Window::on_toggle_add_directory() {

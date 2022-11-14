@@ -20,7 +20,7 @@ Database_Queries::Database_Queries()
   m_username = name;
   m_entrycompletion = Gtk::EntryCompletion::create();
   m_completionmodel = Gtk::ListStore::create(m_completionrecord);
-  
+
   m_entrycompletion->set_model(m_completionmodel);
   m_entrycompletion->set_text_column(m_completionrecord.col_text);
   m_entrycompletion->set_minimum_key_length(1);
@@ -54,11 +54,11 @@ void Database_Queries::refresh_database() {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
   }
-  
+
   sql = "SELECT title from rolas;";
   if (!callback_str.empty())
     callback_str.clear();
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -68,7 +68,7 @@ void Database_Queries::refresh_database() {
   std::string str = callback_str;
   std::string sub_str;
   int i;
-  
+
   while (!str.empty()) {
     i = str.find_first_of("\n", 0);
     sub_str = str.substr(0, i);
@@ -77,14 +77,14 @@ void Database_Queries::refresh_database() {
     std::filesystem::path p = sub_str;
     if (std::filesystem::exists(p))
       continue;
-    
+
     sub_str = "DELETE from rolas where path = '"
       + sub_str + "';";
     sql = sub_str.c_str();
-    
+
     if (!callback_str.empty())
       callback_str.clear();
-    
+
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     if (rc != SQLITE_OK) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -122,19 +122,19 @@ bool model_is_empty(std::shared_ptr<Gtk::ListStore> model) {
 }
 
 void Database_Queries::populate_list() {
-  if (!model_is_empty(m_liststore)) 
+  if (!model_is_empty(m_liststore))
     m_liststore = Gtk::ListStore::create(m_Columns);
-  
-   
+
+
   std::filesystem::path path = "/home/" + m_username + "/.local/share/"
     "music_player/music.db";
   if (!std::filesystem::exists(path))
     return;
-  
+
   rc = sqlite3_open(("/home/" + m_username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
-  
+
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
@@ -144,7 +144,7 @@ void Database_Queries::populate_list() {
 
   if (!callback_str.empty())
     callback_str.clear();
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if (rc != SQLITE_OK) {
@@ -163,14 +163,14 @@ void Database_Queries::populate_list() {
     sub_str = str.substr(0, i);
     str.erase(0, i + 1);
     row[m_Columns.m_col_name] = sub_str;
-    
+
     replace_single_quotation_marks(sub_str);
     sub_str = "SELECT path from rolas WHERE"
       " title = '" + sub_str + "';";
     sql = sub_str.c_str();
     if (!callback_str.empty())
       callback_str.clear();
-    
+
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
     if (rc != SQLITE_OK) {
@@ -179,27 +179,27 @@ void Database_Queries::populate_list() {
     }
 
     i = callback_str.find_first_of("\n", 0);
-    
+
     callback_str.erase(i, i + 1);
     row[m_Columns.m_col_path] = callback_str;
   }
-  
+
   sqlite3_close(db);
 }
 
 void Database_Queries::populate_completion() {
   if (!model_is_empty(m_completionmodel))
     m_completionmodel = Gtk::ListStore::create(m_completionrecord);
-  
+
   std::filesystem::path path = "/home/" + m_username + "/.local/share/"
     "music_player/music.db";
   if (!std::filesystem::exists(path))
     return;
-  
+
   rc = sqlite3_open(("/home/" + m_username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
-  
+
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
@@ -209,7 +209,7 @@ void Database_Queries::populate_completion() {
 
   if (!callback_str.empty())
     callback_str.clear();
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 
   if (rc != SQLITE_OK) {
@@ -224,7 +224,7 @@ void Database_Queries::populate_completion() {
   while (!str.empty()) {
     i = str.find_first_of("\n", 0);
     Gtk::TreeModel::Row row = *(m_completionmodel->append());
-    
+
     sub_str = str.substr(0, i);
     str.erase(0, i + 1);
     row[m_completionrecord.col_text] = sub_str;
@@ -235,7 +235,7 @@ std::string Database_Queries::get_path_from_title(std::string title) {
   rc = sqlite3_open(("/home/" + m_username + "/.local/share/"
                      "music_player/music.db").c_str(),
                     &db);
-  
+
   if (rc) {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     exit(1);
@@ -243,12 +243,12 @@ std::string Database_Queries::get_path_from_title(std::string title) {
 
   std::string str = "SELECT path FROM rolas WHERE title = '" + title + "';";
   sql = str.c_str();
-  
+
   if (!callback_str.empty())
     callback_str.clear();
-  
+
   rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-  
+
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);
     sqlite3_free(zErrMsg);
@@ -258,4 +258,76 @@ std::string Database_Queries::get_path_from_title(std::string title) {
   std::string sub_str;
   int i = str.find_first_of("\n", 0);
   return sub_str = str.substr(0, i);
+}
+
+std::string Database_Queries::populate_list_by_flag(std::string flag,
+                                             std::string value,
+                                             std::string title) {
+  rc = sqlite3_open(("/home/" + m_username + "/.local/share/"
+                     "music_player/music.db").c_str(),
+                    &db);
+  if (rc) {
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    exit(1);
+  }
+
+  std::string str = "select title from rolas where " + flag +
+    " = '" + value + "' and title = '" + title + "';";
+  sql = str.c_str();
+
+  if (!callback_str.empty())
+    callback_str.clear();
+
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  }
+
+  int i;
+  str = callback_str;
+  std::string sub_str;
+
+  i = str.find_first_of("\n", 0);
+  sub_str = str.substr(0, i);
+  sqlite3_close(db);
+
+  return sub_str;
+}
+
+std::string Database_Queries::populate_list_by_flag(std::string flag,
+                                             int value,
+                                             std::string title) {
+  rc = sqlite3_open(("/home/" + m_username + "/.local/share/"
+                     "music_player/music.db").c_str(),
+                    &db);
+  if (rc) {
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    exit(1);
+  }
+
+  std::string str = "select title from rolas where " + flag +
+    " = " + std::to_string(value) + " and title = '" + title + "';";
+  sql = str.c_str();
+
+  if (!callback_str.empty())
+    callback_str.clear();
+
+  rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+  }
+
+  int i;
+  str = callback_str;
+  std::string sub_str;
+
+  i = str.find_first_of("\n", 0);
+  sub_str = str.substr(0, i);
+  sqlite3_close(db);
+
+  return sub_str;
 }
